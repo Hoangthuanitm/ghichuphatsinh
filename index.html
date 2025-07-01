@@ -12,10 +12,10 @@
     <!-- DOMPurify for input sanitization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <style>
-        #internTable td:not(:nth-child(6)) {
+        #internTable td:not(:nth-child(7)) {
             white-space: nowrap;
         }
-        #internTable td:nth-child(6) {
+        #internTable td:nth-child(7) {
             white-space: pre-wrap;
         }
         .table-container {
@@ -87,6 +87,7 @@
                         <th class="px-4 py-3 text-left">Công Ty</th>
                         <th class="px-4 py-3 text-left">Nghiệp Đoàn</th>
                         <th class="px-4 py-3 text-left">Ngày Phát Sinh</th>
+                        <th class="px-4 py-3 text-left">Phát Sinh</th>
                         <th class="px-4 py-3 text-left">Nội Dung</th>
                         <th class="px-4 py-3 text-center">Hành Động</th>
                     </tr>
@@ -120,6 +121,10 @@
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Ngày Phát Sinh</label>
                     <input type="date" id="date" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Phát Sinh</label>
+                    <input type="text" id="issue" class="w-full p-2 border rounded-lg" required>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Nội Dung</label>
@@ -194,7 +199,8 @@
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.company)}</td>
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.union)}</td>
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.date)}</td>
-                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.content)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.issue)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(toUpperCase(data.content))}</td>
                         <td class="px-4 py-3 border-b text-center">
                             <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
                             <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
@@ -244,7 +250,8 @@
             document.getElementById('company').value = editingRow.cells[2].textContent;
             document.getElementById('union').value = editingRow.cells[3].textContent;
             document.getElementById('date').value = editingRow.cells[4].textContent;
-            document.getElementById('content').value = editingRow.cells[5].textContent;
+            document.getElementById('issue').value = editingRow.cells[5].textContent;
+            document.getElementById('content').value = editingRow.cells[6].textContent;
             document.getElementById('internModal').classList.remove('hidden');
         }
 
@@ -284,10 +291,11 @@
             const company = DOMPurify.sanitize(toUpperCase(document.getElementById('company').value.trim()));
             const union = DOMPurify.sanitize(toUpperCase(document.getElementById('union').value.trim()));
             const date = DOMPurify.sanitize(document.getElementById('date').value);
-            const content = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('content').value.trim()));
+            const issue = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('issue').value.trim()));
+            const content = DOMPurify.sanitize(toUpperCase(document.getElementById('content').value.trim()));
 
             // Validate inputs
-            if (!name || !className || !company || !union || !date || !content) {
+            if (!name || !className || !company || !union || !date || !issue || !content) {
                 alert('Vui lòng điền đầy đủ thông tin.');
                 hideLoading();
                 return;
@@ -300,6 +308,7 @@
                 company: company,
                 union: union,
                 date: date,
+                issue: issue,
                 content: content,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -314,7 +323,8 @@
                     editingRow.cells[2].textContent = company;
                     editingRow.cells[3].textContent = union;
                     editingRow.cells[4].textContent = date;
-                    editingRow.cells[5].textContent = content;
+                    editingRow.cells[5].textContent = issue;
+                    editingRow.cells[6].textContent = content;
                 } else {
                     // Add new document
                     const docRef = await db.collection('testHistoryphatsinh').add(internData);
@@ -326,6 +336,7 @@
                         <td class="px-4 py-3 border-b">${company}</td>
                         <td class="px-4 py-3 border-b">${union}</td>
                         <td class="px-4 py-3 border-b">${date}</td>
+                        <td class="px-4 py-3 border-b">${issue}</td>
                         <td class="px-4 py-3 border-b">${content}</td>
                         <td class="px-4 py-3 border-b text-center">
                             <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
