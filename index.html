@@ -151,6 +151,22 @@
 
         let editingRow = null;
 
+        // Function to capitalize first letter of each sentence
+        function capitalizeFirstLetter(text) {
+            if (!text) return text;
+            return text
+                .split('. ')
+                .map(sentence => 
+                    sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
+                )
+                .join('. ');
+        }
+
+        // Function to convert to uppercase
+        function toUpperCase(text) {
+            return text.toUpperCase();
+        }
+
         // Show/Hide Loading Spinner
         function showLoading() {
             document.getElementById('loading').classList.remove('hidden');
@@ -262,12 +278,13 @@
         document.getElementById('internForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             showLoading();
-            const name = DOMPurify.sanitize(document.getElementById('name').value.trim());
-            const className = DOMPurify.sanitize(document.getElementById('class').value.trim());
-            const company = DOMPurify.sanitize(document.getElementById('company').value.trim());
-            const union = DOMPurify.sanitize(document.getElementById('union').value.trim());
+            // Sanitize and format inputs
+            const name = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('name').value.trim()));
+            const className = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('class').value.trim()));
+            const company = DOMPurify.sanitize(toUpperCase(document.getElementById('company').value.trim()));
+            const union = DOMPurify.sanitize(toUpperCase(document.getElementById('union').value.trim()));
             const date = DOMPurify.sanitize(document.getElementById('date').value);
-            const content = DOMPurify.sanitize(document.getElementById('content').value.trim());
+            const content = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('content').value.trim()));
 
             // Validate inputs
             if (!name || !className || !company || !union || !date || !content) {
