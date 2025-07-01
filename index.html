@@ -12,17 +12,14 @@
     <!-- DOMPurify for input sanitization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <style>
-        #internTable td:not(:nth-child(7)) {
-            white-space: nowrap;
-        }
-        #internTable td:nth-child(7) {
-            white-space: pre-wrap;
+        #internTable td {
+            white-space: nowrap; /* Áp dụng nowrap cho tất cả các cột */
         }
         .table-container {
-            overflow-x: auto;
+            overflow-x: auto; /* Cho phép cuộn ngang nếu nội dung quá dài */
         }
         #internTable {
-            min-width: 1000px;
+            min-width: 1000px; /* Đảm bảo bảng đủ rộng */
         }
         #internModal .modal-content {
             max-height: 90vh;
@@ -135,6 +132,9 @@
                     <label class="block text-gray-700 mb-2">XKLĐ</label>
                     <select id="xkld" class="w-full p-2 border rounded-lg" disabled>
                         <option value="">Chọn XKLĐ</option>
+                   那么
+
+System: <option>
                     </select>
                 </div>
                 <div class="mb-4">
