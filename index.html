@@ -9,6 +9,8 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore-compat.js"></script>
+    <!-- DOMPurify for input sanitization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <style>
         #internTable td:not(:nth-child(6)) {
             white-space: nowrap;
@@ -25,6 +27,11 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+    <!-- Loading Spinner -->
+    <div id="loading" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600"></div>
+    </div>
+
     <div class="container mx-auto p-6">
         <!-- Header -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -56,20 +63,7 @@
                         <th class="px-4 py-3 text-center">Hành Động</th>
                     </tr>
                 </thead>
-                <tbody id="internTableBody" class="text-gray-700">
-                    <tr>
-                        <td class="px-4 py-3 border-b">Nguyễn Văn A</td>
-                        <td class="px-4 py-3 border-b">CNTT01</td>
-                        <td class="px-4 py-3 border-b">Công ty ABC</td>
-                        <td class="px-4 py-3 border-b">Nghiệp đoàn XYZ</td>
-                        <td class="px-4 py-3 border-b">2025-06-01</td>
-                        <td class="px-4 py-3 border-b">- Không làm bài\n- Không học bài..</td>
-                        <td class="px-4 py-3 border-b text-center">
-                            <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="internTableBody" class="text-gray-700"></tbody>
             </table>
         </div>
     </div>
@@ -114,12 +108,13 @@
     <script>
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAfy4QMD9_7PyFHpInNdKDRWuW4AYCtLJ4",
+            authDomain: "history-e4633.firebaseapp.com",
+            projectId: "history-e4633",
+            storageBucket: "history-e4633.firebasestorage.app",
+            messagingSenderId: "331974436893",
+            appId: "1:331974436893:web:10c3c6adf7b66d2b5fbef4",
+            measurementId: "G-DC055090BW"
         };
 
         // Initialize Firebase
@@ -127,6 +122,52 @@
         const db = firebase.firestore();
 
         let editingRow = null;
+
+        // Show/Hide Loading Spinner
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // Load Interns from Firestore
+        async function loadInterns() {
+            showLoading();
+            const tableBody = document.getElementById('internTableBody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            try {
+                const querySnapshot = await db.collection('testHistoryphatsinh')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const row = document.createElement('tr');
+                    row.dataset.docId = doc.id;
+                    row.innerHTML = `
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.name)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.class)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.company)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.union)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.date)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.content)}</td>
+                        <td class="px-4 py-3 border-b text-center">
+                            <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading interns:', error);
+                alert('Không thể tải dữ liệu từ Firestore: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Call loadInterns on page load
+        document.addEventListener('DOMContentLoaded', loadInterns);
 
         // Search Function
         document.getElementById('searchInput').addEventListener('input', function(e) {
@@ -170,22 +211,42 @@
             editingRow = null;
         }
 
-        // Delete Row
-        function deleteIntern(button) {
+        // Delete Intern from Firestore
+        async function deleteIntern(button) {
             if (confirm('Bạn có chắc muốn xóa thông tin này?')) {
-                button.closest('tr').remove();
+                showLoading();
+                const row = button.closest('tr');
+                const docId = row.dataset.docId;
+                try {
+                    await db.collection('testHistoryphatsinh').doc(docId).delete();
+                    row.remove();
+                    alert('Xóa thành công!');
+                } catch (error) {
+                    console.error('Error deleting intern:', error);
+                    alert('Đã xảy ra lỗi khi xóa dữ liệu: ' + error.message);
+                } finally {
+                    hideLoading();
+                }
             }
         }
 
         // Form Submission
         document.getElementById('internForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const className = document.getElementById('class').value.trim();
-            const company = document.getElementById('company').value.trim();
-            const union = document.getElementById('union').value.trim();
-            const date = document.getElementById('date').value;
-            const content = document.getElementById('content').value;
+            showLoading();
+            const name = DOMPurify.sanitize(document.getElementById('name').value.trim());
+            const className = DOMPurify.sanitize(document.getElementById('class').value.trim());
+            const company = DOMPurify.sanitize(document.getElementById('company').value.trim());
+            const union = DOMPurify.sanitize(document.getElementById('union').value.trim());
+            const date = DOMPurify.sanitize(document.getElementById('date').value);
+            const content = DOMPurify.sanitize(document.getElementById('content').value.trim());
+
+            // Validate inputs
+            if (!name || !className || !company || !union || !date || !content) {
+                alert('Vui lòng điền đầy đủ thông tin.');
+                hideLoading();
+                return;
+            }
 
             // Prepare data for Firestore
             const internData = {
@@ -199,24 +260,21 @@
             };
 
             try {
-                // Save to Firestore
                 if (editingRow) {
-                    // Update existing document (assuming document ID is stored in row's data attribute)
-                    const docId = editingRow.dataset.docId || null;
-                    if (docId) {
-                        await db.collection('testHistoryphatsinh').doc(docId).update(internData);
-                    } else {
-                        // Fallback: create new document if no docId
-                        const docRef = await db.collection('testHistoryphatsinh').add(internData);
-                        editingRow.dataset.docId = docRef.id;
-                    }
+                    // Update existing document
+                    const docId = editingRow.dataset.docId;
+                    await db.collection('testHistoryphatsinh').doc(docId).update(internData);
+                    editingRow.cells[0].textContent = name;
+                    editingRow.cells[1].textContent = className;
+                    editingRow.cells[2].textContent = company;
+                    editingRow.cells[3].textContent = union;
+                    editingRow.cells[4].textContent = date;
+                    editingRow.cells[5].textContent = content;
                 } else {
                     // Add new document
                     const docRef = await db.collection('testHistoryphatsinh').add(internData);
-                    // Update table
-                    const tableBody = document.getElementById('internTableBody');
                     const newRow = document.createElement('tr');
-                    newRow.dataset.docId = docRef.id; // Store Firestore doc ID
+                    newRow.dataset.docId = docRef.id;
                     newRow.innerHTML = `
                         <td class="px-4 py-3 border-b">${name}</td>
                         <td class="px-4 py-3 border-b">${className}</td>
@@ -229,24 +287,19 @@
                             <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </td>
                     `;
-                    tableBody.appendChild(newRow);
+                    document.getElementById('internTableBody').appendChild(newRow);
                 }
-
-                // Update table for edit
-                if (editingRow) {
-                    editingRow.cells[0].textContent = name;
-                    editingRow.cells[1].textContent = className;
-                    editingRow.cells[2].textContent = company;
-                    editingRow.cells[3].textContent = union;
-                    editingRow.cells[4].textContent = date;
-                    editingRow.cells[5].textContent = content;
-                }
-
                 alert('Dữ liệu đã được lưu thành công!');
                 closeModal();
             } catch (error) {
-                console.error('Lỗi khi lưu vào Firestore:', error);
-                alert('Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.');
+                console.error('Error saving to Firestore:', error);
+                let message = 'Đã xảy ra lỗi khi lưu dữ liệu.';
+                if (error.code === 'permission-denied') {
+                    message = 'Bạn không có quyền thực hiện thao tác này.';
+                }
+                alert(message);
+            } finally {
+                hideLoading();
             }
         });
     </script>
