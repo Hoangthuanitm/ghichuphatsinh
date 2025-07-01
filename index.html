@@ -24,44 +24,43 @@
         #internTable {
             min-width: 1000px;
         }
-        /* Modal Styling */
         #internModal .modal-content {
-            max-height: 90vh; /* Limit modal height to 90% of viewport */
-            overflow-y: auto; /* Enable vertical scrollbar */
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
-            scrollbar-width: thin; /* Firefox: slim scrollbar */
-            scrollbar-color: #888 #f1f1f1; /* Firefox: scrollbar colors */
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
         }
         #internModal .modal-content::-webkit-scrollbar {
-            width: 8px; /* Chrome/Safari: slim scrollbar */
+            width: 8px;
         }
         #internModal .modal-content::-webkit-scrollbar-track {
-            background: #f1f1f1; /* Scrollbar track color */
+            background: #f1f1f1;
         }
         #internModal .modal-content::-webkit-scrollbar-thumb {
-            background: #888; /* Scrollbar thumb color */
+            background: #888;
             border-radius: 4px;
         }
         #internModal .modal-content::-webkit-scrollbar-thumb:hover {
-            background: #555; /* Scrollbar thumb hover color */
+            background: #555;
         }
-        /* Responsive modal width */
         @media (max-width: 640px) {
             #internModal .modal-content {
-                width: 90vw; /* 90% of viewport width on mobile */
-                max-width: none; /* Remove max-width restriction */
+                width: 90vw;
+                max-width: none;
             }
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <!-- Loading Spinner -->
     <div id="loading" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600"></div>
     </div>
 
     <div class="container mx-auto p-6">
-        <!-- Header -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Quản Lý Thông Tin Thực Tập Sinh</h1>
             <div class="flex items-center space-x-4">
@@ -77,7 +76,6 @@
             </div>
         </div>
 
-        <!-- Table -->
         <div class="table-container bg-white shadow-md rounded-lg">
             <table id="internTable" class="w-full table-auto">
                 <thead class="bg-blue-600 text-white">
@@ -99,34 +97,45 @@
         </div>
     </div>
 
-    <!-- Modal for Adding/Editing -->
     <div id="internModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
         <div class="modal-content bg-white rounded-lg p-6 w-full max-w-lg">
             <h2 id="modalTitle" class="text-2xl font-bold mb-4">Thêm Thực Tập Sinh</h2>
             <form id="internForm">
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Lớp</label>
-                    <input type="text" id="name" class="w-full p-2 border rounded-lg" required>
+                    <select id="class" class="w-full p-2 border rounded-lg" required>
+                        <option value="">Chọn Lớp</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Phụ Trách</label>
-                    <input type="text" id="name" class="w-full p-2 border rounded-lg" required>
+                    <select id="personInCharge" class="w-full p-2 border rounded-lg" required>
+                        <option value="">Chọn Phụ Trách</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Họ và Tên</label>
-                    <input type="text" id="name" class="w-full p-2 border rounded-lg" required>
+                    <select id="fullName" class="w-full p-2 border rounded-lg" required>
+                        <option value="">Chọn Họ và Tên</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Công Ty</label>
-                    <input type="text" id="company" class="w-full p-2 border rounded-lg" required>
+                    <select id="company" class="w-full p-2 border rounded-lg" disabled>
+                        <option value="">Chọn Công Ty</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Nghiệp Đoàn</label>
-                    <input type="text" id="union" class="w-full p-2 border rounded-lg" required>
+                    <select id="union" class="w-full p-2 border rounded-lg" disabled>
+                        <option value="">Chọn Nghiệp Đoàn</option>
+                    </select>
                 </div>
-                 <div class="mb-4">
+                <div class="mb-4">
                     <label class="block text-gray-700 mb-2">XKLĐ</label>
-                    <input type="text" id="union" class="w-full p-2 border rounded-lg" required>
+                    <select id="xkld" class="w-full p-2 border rounded-lg" disabled>
+                        <option value="">Chọn XKLĐ</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Ngày Phát Sinh</label>
@@ -165,20 +174,20 @@
         const db = firebase.firestore();
 
         let editingRow = null;
+        let sheetData = [];
 
-        // Function to capitalize first letter of each sentence
+        // Function to capitalize first letter of each word
         function capitalizeFirstLetter(text) {
             if (!text) return text;
             return text
-                .split('. ')
-                .map(sentence => 
-                    sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
-                )
-                .join('. ');
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
         }
 
         // Function to convert to uppercase
         function toUpperCase(text) {
+            if (!text) return text;
             return text.toUpperCase();
         }
 
@@ -190,11 +199,169 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        // Fetch data from SheetDB
+        async function fetchSheetData() {
+            showLoading();
+            try {
+                const response = await fetch('https://sheetdb.io/api/v1/nowbvmpq7ee5q');
+                sheetData = await response.json();
+                // Normalize and filter valid data
+                sheetData = sheetData
+                    .filter(item => item['Lớp'] && item['Lớp'].trim())
+                    .map(item => ({
+                        ...item,
+                        'Họ và Tên': (item['Họ và Tên'] || '').trim(),
+                        'Công Ty': (item['Công Ty'] || '').trim().toUpperCase(),
+                        'Nghiệp Đoàn': (item['Nghiệp Đoàn'] || '').trim().toUpperCase(),
+                        'XKLĐ': (item['XKLĐ'] || '').trim().toUpperCase(),
+                        'Lớp': item['Lớp'].trim().toUpperCase(),
+                        'Phụ Trách': (item['Phụ Trách'] || '').trim().toUpperCase()
+                    }));
+                console.log('Normalized SheetDB data:', sheetData);
+                // Kiểm tra dữ liệu cho lớp 24C16
+                const class24C16Data = sheetData.filter(item => item['Lớp'] === '24C16');
+                console.log('Dữ liệu cho lớp 24C16:', class24C16Data);
+                populateClassDropdown();
+            } catch (error) {
+                console.error('Error fetching SheetDB data:', error);
+                alert('Không thể tải dữ liệu từ SheetDB: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Populate Class dropdown
+        function populateClassDropdown() {
+            const classSelect = document.getElementById('class');
+            const uniqueClasses = [...new Set(sheetData.map(item => item['Lớp']))];
+            classSelect.innerHTML = '<option value="">Chọn Lớp</option>';
+            uniqueClasses.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls;
+                option.textContent = cls;
+                classSelect.appendChild(option);
+            });
+        }
+
+        // Populate Person in Charge dropdown based on selected Class
+        function populatePersonInChargeDropdown(selectedClass) {
+            const personInChargeSelect = document.getElementById('personInCharge');
+            personInChargeSelect.innerHTML = '<option value="">Chọn Phụ Trách</option>';
+            if (selectedClass) {
+                const filteredData = sheetData.filter(item => item['Lớp'] === selectedClass);
+                const uniquePersons = [...new Set(filteredData.map(item => item['Phụ Trách']).filter(person => person))];
+                uniquePersons.forEach(person => {
+                    const option = document.createElement('option');
+                    option.value = person;
+                    option.textContent = person;
+                    personInChargeSelect.appendChild(option);
+                });
+                // Log danh sách Phụ Trách cho lớp được chọn
+                console.log(`Phụ Trách cho lớp ${selectedClass}:`, uniquePersons);
+            }
+        }
+
+        // Populate Full Name dropdown based on selected Class and Person in Charge
+        function populateFullNameDropdown(selectedPersonInCharge) {
+            const fullNameSelect = document.getElementById('fullName');
+            const selectedClass = document.getElementById('class').value;
+            fullNameSelect.innerHTML = '<option value="">Chọn Họ và Tên</option>';
+            if (selectedClass && selectedPersonInCharge) {
+                const filteredData = sheetData.filter(item => 
+                    item['Lớp'] === selectedClass && 
+                    item['Phụ Trách'] === selectedPersonInCharge &&
+                    item['Họ và Tên'] && item['Họ và Tên'].trim()
+                );
+                const uniqueNames = [...new Set(filteredData.map(item => item['Họ và Tên']))];
+                console.log(`Họ và Tên cho lớp ${selectedClass} và Phụ Trách ${selectedPersonInCharge}:`, uniqueNames);
+                if (uniqueNames.length === 0) {
+                    console.warn(`Không tìm thấy Họ và Tên nào cho lớp ${selectedClass} và Phụ Trách ${selectedPersonInCharge}`);
+                    fullNameSelect.innerHTML = '<option value="">Không có Họ và Tên nào phù hợp</option>';
+                } else {
+                    uniqueNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = capitalizeFirstLetter(name);
+                        fullNameSelect.appendChild(option);
+                    });
+                }
+            } else {
+                console.warn('Chưa chọn đủ Lớp hoặc Phụ Trách:', { selectedClass, selectedPersonInCharge });
+            }
+        }
+
+        // Populate Company, Union, XKLĐ dropdowns based on selected Full Name
+        function populateRelatedDropdowns() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const selectedClass = document.getElementById('class').value;
+            const selectedPersonInCharge = document.getElementById('personInCharge').value;
+            const companySelect = document.getElementById('company');
+            const unionSelect = document.getElementById('union');
+            const xkldSelect = document.getElementById('xkld');
+            
+            companySelect.innerHTML = '<option value="">Chọn Công Ty</option>';
+            unionSelect.innerHTML = '<option value="">Chọn Nghiệp Đoàn</option>';
+            xkldSelect.innerHTML = '<option value="">Chọn XKLĐ</option>';
+            
+            if (fullName && selectedClass && selectedPersonInCharge) {
+                const internData = sheetData.find(item => 
+                    item['Họ và Tên'].trim().toLowerCase() === fullName.trim().toLowerCase() &&
+                    item['Lớp'] === selectedClass &&
+                    item['Phụ Trách'] === selectedPersonInCharge
+                );
+                console.log('Dữ liệu thực tập sinh được chọn:', internData);
+                if (internData) {
+                    const company = (internData['Công Ty'] || '').trim().toUpperCase();
+                    const union = (internData['Nghiệp Đoàn'] || '').trim().toUpperCase();
+                    const xkld = (internData['XKLĐ'] || '').trim().toUpperCase();
+                    
+                    if (company) {
+                        companySelect.innerHTML = `<option value="${company}">${company}</option>`;
+                        companySelect.value = company;
+                        companySelect.disabled = false;
+                    } else {
+                        companySelect.disabled = true;
+                    }
+                    
+                    if (union) {
+                        unionSelect.innerHTML = `<option value="${union}">${union}</option>`;
+                        unionSelect.value = union;
+                        unionSelect.disabled = false;
+                    } else {
+                        unionSelect.disabled = true;
+                    }
+                    
+                    if (xkld) {
+                        xkldSelect.innerHTML = `<option value="${xkld}">${xkld}</option>`;
+                        xkldSelect.value = xkld;
+                        xkldSelect.disabled = false;
+                    } else {
+                        xkldSelect.disabled = true;
+                    }
+                } else {
+                    companySelect.disabled = true;
+                    unionSelect.disabled = true;
+                    xkldSelect.disabled = true;
+                }
+            } else {
+                companySelect.disabled = true;
+                unionSelect.disabled = true;
+                xkldSelect.disabled = true;
+            }
+        }
+
+        // Load SheetDB data and interns on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, fetching SheetDB data...');
+            fetchSheetData();
+            loadInterns();
+        });
+
         // Load Interns from Firestore
         async function loadInterns() {
             showLoading();
             const tableBody = document.getElementById('internTableBody');
-            tableBody.innerHTML = ''; // Clear existing rows
+            tableBody.innerHTML = '';
             try {
                 const querySnapshot = await db.collection('testHistoryphatsinh')
                     .orderBy('timestamp', 'desc')
@@ -204,13 +371,15 @@
                     const row = document.createElement('tr');
                     row.dataset.docId = doc.id;
                     row.innerHTML = `
-                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.name)}</td>
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.class)}</td>
-                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.company)}</td>
-                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.union)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.personInCharge)}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(capitalizeFirstLetter(data.fullName))}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.company || '')}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.union || '')}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.xkld || '')}</td>
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.date)}</td>
                         <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.issue)}</td>
-                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(toUpperCase(data.content))}</td>
+                        <td class="px-4 py-3 border-b">${DOMPurify.sanitize(data.content)}</td>
                         <td class="px-4 py-3 border-b text-center">
                             <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
                             <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
@@ -226,9 +395,6 @@
             }
         }
 
-        // Call loadInterns on page load
-        document.addEventListener('DOMContentLoaded', loadInterns);
-
         // Search Function
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
@@ -241,28 +407,59 @@
 
         // Open Modal for Adding
         function addNewIntern() {
-            document.getElementById('modalTitle').textContent = 'Thêm Thực Tập Sinh';
-            document.getElementById('internForm').reset();
-            editingRow = null;
-            // Set current date
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            document.getElementById('date').value = formattedDate;
-            document.getElementById('internModal').classList.remove('hidden');
+            console.log('addNewIntern called');
+            try {
+                document.getElementById('modalTitle').textContent = 'Thêm Thực Tập Sinh';
+                document.getElementById('internForm').reset();
+                editingRow = null;
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                document.getElementById('date').value = formattedDate;
+                if (sheetData.length > 0) {
+                    populateClassDropdown();
+                } else {
+                    console.warn('sheetData is empty, initializing empty dropdowns');
+                    document.getElementById('class').innerHTML = '<option value="">Chọn Lớp</option>';
+                }
+                document.getElementById('personInCharge').innerHTML = '<option value="">Chọn Phụ Trách</option>';
+                document.getElementById('fullName').innerHTML = '<option value="">Chọn Họ và Tên</option>';
+                document.getElementById('company').innerHTML = '<option value="">Chọn Công Ty</option>';
+                document.getElementById('union').innerHTML = '<option value="">Chọn Nghiệp Đoàn</option>';
+                document.getElementById('xkld').innerHTML = '<option value="">Chọn XKLĐ</option>';
+                document.getElementById('company').disabled = true;
+                document.getElementById('union').disabled = true;
+                document.getElementById('xkld').disabled = true;
+                const modal = document.getElementById('internModal');
+                modal.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error in addNewIntern:', error);
+                alert('Đã xảy ra lỗi khi mở form thêm thực tập sinh: ' + error.message);
+            }
         }
 
         // Open Modal for Editing
         function editIntern(button) {
-            editingRow = button.closest('tr');
-            document.getElementById('modalTitle').textContent = 'Sửa Thông Tin Thực Tập Sinh';
-            document.getElementById('name').value = editingRow.cells[0].textContent;
-            document.getElementById('class').value = editingRow.cells[1].textContent;
-            document.getElementById('company').value = editingRow.cells[2].textContent;
-            document.getElementById('union').value = editingRow.cells[3].textContent;
-            document.getElementById('date').value = editingRow.cells[4].textContent;
-            document.getElementById('issue').value = editingRow.cells[5].textContent;
-            document.getElementById('content').value = editingRow.cells[6].textContent;
-            document.getElementById('internModal').classList.remove('hidden');
+            console.log('editIntern called');
+            try {
+                editingRow = button.closest('tr');
+                document.getElementById('modalTitle').textContent = 'Sửa Thông Tin Thực Tập Sinh';
+                document.getElementById('class').value = editingRow.cells[0].textContent;
+                populatePersonInChargeDropdown(editingRow.cells[0].textContent);
+                document.getElementById('personInCharge').value = editingRow.cells[1].textContent;
+                populateFullNameDropdown(editingRow.cells[1].textContent);
+                document.getElementById('fullName').value = editingRow.cells[2].textContent;
+                populateRelatedDropdowns();
+                document.getElementById('company').value = editingRow.cells[3].textContent;
+                document.getElementById('union').value = editingRow.cells[4].textContent;
+                document.getElementById('xkld').value = editingRow.cells[5].textContent;
+                document.getElementById('date').value = editingRow.cells[6].textContent;
+                document.getElementById('issue').value = editingRow.cells[7].textContent;
+                document.getElementById('content').value = editingRow.cells[8].textContent;
+                document.getElementById('internModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error in editIntern:', error);
+                alert('Đã xảy ra lỗi khi mở form sửa thông tin: ' + error.message);
+            }
         }
 
         // Close Modal
@@ -291,32 +488,106 @@
             }
         }
 
+        // Dropdown event listeners
+        document.getElementById('class').addEventListener('change', function(e) {
+            const selectedClass = e.target.value;
+            populatePersonInChargeDropdown(selectedClass);
+            document.getElementById('personInCharge').value = '';
+            document.getElementById('fullName').innerHTML = '<option value="">Chọn Họ và Tên</option>';
+            document.getElementById('company').innerHTML = '<option value="">Chọn Công Ty</option>';
+            document.getElementById('union').innerHTML = '<option value="">Chọn Nghiệp Đoàn</option>';
+            document.getElementById('xkld').innerHTML = '<option value="">Chọn XKLĐ</option>';
+            document.getElementById('company').disabled = true;
+            document.getElementById('union').disabled = true;
+            document.getElementById('xkld').disabled = true;
+        });
+
+        document.getElementById('personInCharge').addEventListener('change', function(e) {
+            const selectedPersonInCharge = e.target.value;
+            populateFullNameDropdown(selectedPersonInCharge);
+            document.getElementById('fullName').value = '';
+            document.getElementById('company').innerHTML = '<option value="">Chọn Công Ty</option>';
+            document.getElementById('union').innerHTML = '<option value="">Chọn Nghiệp Đoàn</option>';
+            document.getElementById('xkld').innerHTML = '<option value="">Chọn XKLĐ</option>';
+            document.getElementById('company').disabled = true;
+            document.getElementById('union').disabled = true;
+            document.getElementById('xkld').disabled = true;
+        });
+
+        document.getElementById('fullName').addEventListener('change', populateRelatedDropdowns);
+
         // Form Submission
         document.getElementById('internForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             showLoading();
-            // Sanitize and format inputs
-            const name = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('name').value.trim()));
-            const className = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('class').value.trim()));
-            const company = DOMPurify.sanitize(toUpperCase(document.getElementById('company').value.trim()));
-            const union = DOMPurify.sanitize(toUpperCase(document.getElementById('union').value.trim()));
-            const date = DOMPurify.sanitize(document.getElementById('date').value);
-            const issue = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('issue').value.trim()));
-            const content = DOMPurify.sanitize(toUpperCase(document.getElementById('content').value.trim()));
 
-            // Validate inputs
-            if (!name || !className || !company || !union || !date || !issue || !content) {
-                alert('Vui lòng điền đầy đủ thông tin.');
+            const className = DOMPurify.sanitize(toUpperCase(document.getElementById('class').value));
+            const personInCharge = DOMPurify.sanitize(toUpperCase(document.getElementById('personInCharge').value));
+            const fullName = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('fullName').value));
+            const company = DOMPurify.sanitize(toUpperCase(document.getElementById('company').value || ''));
+            const union = DOMPurify.sanitize(toUpperCase(document.getElementById('union').value || ''));
+            const xkld = DOMPurify.sanitize(toUpperCase(document.getElementById('xkld').value || ''));
+            const date = DOMPurify.sanitize(document.getElementById('date').value);
+            const issue = DOMPurify.sanitize(capitalizeFirstLetter(document.getElementById('issue').value));
+            const content = DOMPurify.sanitize(document.getElementById('content').value);
+
+            console.log('Form submitted with values:', {
+                className, personInCharge, fullName, company, union, xkld, date, issue, content
+            });
+
+            // Chỉ yêu cầu các trường bắt buộc
+            if (!className || !personInCharge || !fullName || !date || !issue || !content) {
+                alert('Vui lòng điền đầy đủ các trường bắt buộc: Lớp, Phụ Trách, Họ và Tên, Ngày Phát Sinh, Phát Sinh, Nội Dung.');
                 hideLoading();
                 return;
             }
 
-            // Prepare data for Firestore
-            const internData = {
-                name: name,
+            // Kiểm tra dữ liệu thực tập sinh
+            const internData = sheetData.find(item => 
+                item['Họ và Tên'].trim().toLowerCase() === fullName.trim().toLowerCase() &&
+                item['Lớp'].trim().toUpperCase() === className.trim().toUpperCase() &&
+                item['Phụ Trách'].trim().toUpperCase() === personInCharge.trim().toUpperCase()
+            );
+            if (!internData) {
+                console.log('No matching internData for fullName, class, and personInCharge:', { fullName, className, personInCharge });
+                alert('Không tìm thấy thông tin thực tập sinh phù hợp với Lớp và Phụ Trách. Vui lòng kiểm tra lại.');
+                hideLoading();
+                return;
+            }
+
+            // Kiểm tra tính hợp lệ của Công Ty, Nghiệp Đoàn, XKLĐ nếu chúng được cung cấp
+            const sheetCompany = (internData['Công Ty'] || '').trim().toUpperCase();
+            const sheetUnion = (internData['Nghiệp Đoàn'] || '').trim().toUpperCase();
+            const sheetXkld = (internData['XKLĐ'] || '').trim().toUpperCase();
+
+            let errorMessage = '';
+            if (company && sheetCompany && sheetCompany !== company.trim().toUpperCase()) {
+                errorMessage += 'Công Ty không khớp. ';
+            }
+            if (union && sheetUnion && sheetUnion !== union.trim().toUpperCase()) {
+                errorMessage += 'Nghiệp Đoàn không khớp. ';
+            }
+            if (xkld && sheetXkld && sheetXkld !== xkld.trim().toUpperCase()) {
+                errorMessage += 'XKLĐ không khớp. ';
+            }
+            if (errorMessage) {
+                console.log('Validation failed:', {
+                    sheetCompany, formCompany: company,
+                    sheetUnion, formUnion: union,
+                    sheetXkld, formXkld: xkld
+                });
+                alert('Dữ liệu không hợp lệ: ' + errorMessage);
+                hideLoading();
+                return;
+            }
+
+            const internDataToSave = {
                 class: className,
-                company: company,
-                union: union,
+                personInCharge: personInCharge,
+                fullName: fullName,
+                company: company || '',
+                union: union || '',
+                xkld: xkld || '',
                 date: date,
                 issue: issue,
                 content: content,
@@ -325,26 +596,28 @@
 
             try {
                 if (editingRow) {
-                    // Update existing document
                     const docId = editingRow.dataset.docId;
-                    await db.collection('testHistoryphatsinh').doc(docId).update(internData);
-                    editingRow.cells[0].textContent = name;
-                    editingRow.cells[1].textContent = className;
-                    editingRow.cells[2].textContent = company;
-                    editingRow.cells[3].textContent = union;
-                    editingRow.cells[4].textContent = date;
-                    editingRow.cells[5].textContent = issue;
-                    editingRow.cells[6].textContent = content;
+                    await db.collection('testHistoryphatsinh').doc(docId).update(internDataToSave);
+                    editingRow.cells[0].textContent = className;
+                    editingRow.cells[1].textContent = personInCharge;
+                    editingRow.cells[2].textContent = capitalizeFirstLetter(fullName);
+                    editingRow.cells[3].textContent = company || '';
+                    editingRow.cells[4].textContent = union || '';
+                    editingRow.cells[5].textContent = xkld || '';
+                    editingRow.cells[6].textContent = date;
+                    editingRow.cells[7].textContent = issue;
+                    editingRow.cells[8].textContent = content;
                 } else {
-                    // Add new document
-                    const docRef = await db.collection('testHistoryphatsinh').add(internData);
+                    const docRef = await db.collection('testHistoryphatsinh').add(internDataToSave);
                     const newRow = document.createElement('tr');
                     newRow.dataset.docId = docRef.id;
                     newRow.innerHTML = `
-                        <td class="px-4 py-3 border-b">${name}</td>
                         <td class="px-4 py-3 border-b">${className}</td>
-                        <td class="px-4 py-3 border-b">${company}</td>
-                        <td class="px-4 py-3 border-b">${union}</td>
+                        <td class="px-4 py-3 border-b">${personInCharge}</td>
+                        <td class="px-4 py-3 border-b">${capitalizeFirstLetter(fullName)}</td>
+                        <td class="px-4 py-3 border-b">${company || ''}</td>
+                        <td class="px-4 py-3 border-b">${union || ''}</td>
+                        <td class="px-4 py-3 border-b">${xkld || ''}</td>
                         <td class="px-4 py-3 border-b">${date}</td>
                         <td class="px-4 py-3 border-b">${issue}</td>
                         <td class="px-4 py-3 border-b">${content}</td>
@@ -353,7 +626,7 @@
                             <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </td>
                     `;
-                    document.getElementById('internTableBody').appendChild(newRow);
+                    document.getElementById('internTableBody').prepend(newRow);
                 }
                 alert('Dữ liệu đã được lưu thành công!');
                 closeModal();
