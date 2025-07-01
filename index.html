@@ -24,6 +24,34 @@
         #internTable {
             min-width: 1000px;
         }
+        /* Modal Styling */
+        #internModal .modal-content {
+            max-height: 90vh; /* Limit modal height to 90% of viewport */
+            overflow-y: auto; /* Enable vertical scrollbar */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+            scrollbar-width: thin; /* Firefox: slim scrollbar */
+            scrollbar-color: #888 #f1f1f1; /* Firefox: scrollbar colors */
+        }
+        #internModal .modal-content::-webkit-scrollbar {
+            width: 8px; /* Chrome/Safari: slim scrollbar */
+        }
+        #internModal .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1; /* Scrollbar track color */
+        }
+        #internModal .modal-content::-webkit-scrollbar-thumb {
+            background: #888; /* Scrollbar thumb color */
+            border-radius: 4px;
+        }
+        #internModal .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #555; /* Scrollbar thumb hover color */
+        }
+        /* Responsive modal width */
+        @media (max-width: 640px) {
+            #internModal .modal-content {
+                width: 90vw; /* 90% of viewport width on mobile */
+                max-width: none; /* Remove max-width restriction */
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -70,7 +98,7 @@
 
     <!-- Modal for Adding/Editing -->
     <div id="internModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+        <div class="modal-content bg-white rounded-lg p-6 w-full max-w-lg">
             <h2 id="modalTitle" class="text-2xl font-bold mb-4">Thêm Thực Tập Sinh</h2>
             <form id="internForm">
                 <div class="mb-4">
