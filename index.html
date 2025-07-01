@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Phát Sinh Thực Tập Sinh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore-compat.js"></script>
+    <style>
+        #internTable td:not(:nth-child(6)) {
+            white-space: nowrap;
+        }
+        #internTable td:nth-child(6) {
+            white-space: pre-wrap;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        #internTable {
+            min-width: 1000px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Quản Lý Thông Tin Thực Tập Sinh</h1>
+            <div class="flex items-center space-x-4">
+                <div class="relative w-full max-w-md">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm thực tập sinh..." 
+                           class="w-full p-3 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button onclick="addNewIntern()" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Thêm Thực Tập Sinh
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container bg-white shadow-md rounded-lg">
+            <table id="internTable" class="w-full table-auto">
+                <thead class="bg-blue-600 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Họ và Tên</th>
+                        <th class="px-4 py-3 text-left">Lớp</th>
+                        <th class="px-4 py-3 text-left">Công Ty</th>
+                        <th class="px-4 py-3 text-left">Nghiệp Đoàn</th>
+                        <th class="px-4 py-3 text-left">Ngày Phát Sinh</th>
+                        <th class="px-4 py-3 text-left">Nội Dung</th>
+                        <th class="px-4 py-3 text-center">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody id="internTableBody" class="text-gray-700">
+                    <tr>
+                        <td class="px-4 py-3 border-b">Nguyễn Văn A</td>
+                        <td class="px-4 py-3 border-b">CNTT01</td>
+                        <td class="px-4 py-3 border-b">Công ty ABC</td>
+                        <td class="px-4 py-3 border-b">Nghiệp đoàn XYZ</td>
+                        <td class="px-4 py-3 border-b">2025-06-01</td>
+                        <td class="px-4 py-3 border-b">- Không làm bài\n- Không học bài..</td>
+                        <td class="px-4 py-3 border-b text-center">
+                            <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing -->
+    <div id="internModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4">Thêm Thực Tập Sinh</h2>
+            <form id="internForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Họ và Tên</label>
+                    <input type="text" id="name" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Lớp</label>
+                    <input type="text" id="class" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Công Ty</label>
+                    <input type="text" id="company" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Nghiệp Đoàn</label>
+                    <input type="text" id="union" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Ngày Phát Sinh</label>
+                    <input type="date" id="date" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Nội Dung</label>
+                    <textarea id="content" class="w-full p-2 border rounded-lg" rows="4" required placeholder="Ví dụ:\n- Không làm bài\n- Không học bài.."></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Hủy</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let editingRow = null;
+
+        // Search Function
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#internTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Open Modal for Adding
+        function addNewIntern() {
+            document.getElementById('modalTitle').textContent = 'Thêm Thực Tập Sinh';
+            document.getElementById('internForm').reset();
+            editingRow = null;
+            // Set current date
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date').value = formattedDate;
+            document.getElementById('internModal').classList.remove('hidden');
+        }
+
+        // Open Modal for Editing
+        function editIntern(button) {
+            editingRow = button.closest('tr');
+            document.getElementById('modalTitle').textContent = 'Sửa Thông Tin Thực Tập Sinh';
+            document.getElementById('name').value = editingRow.cells[0].textContent;
+            document.getElementById('class').value = editingRow.cells[1].textContent;
+            document.getElementById('company').value = editingRow.cells[2].textContent;
+            document.getElementById('union').value = editingRow.cells[3].textContent;
+            document.getElementById('date').value = editingRow.cells[4].textContent;
+            document.getElementById('content').value = editingRow.cells[5].textContent;
+            document.getElementById('internModal').classList.remove('hidden');
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('internModal').classList.add('hidden');
+            document.getElementById('internForm').reset();
+            editingRow = null;
+        }
+
+        // Delete Row
+        function deleteIntern(button) {
+            if (confirm('Bạn có chắc muốn xóa thông tin này?')) {
+                button.closest('tr').remove();
+            }
+        }
+
+        // Form Submission
+        document.getElementById('internForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const className = document.getElementById('class').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const union = document.getElementById('union').value.trim();
+            const date = document.getElementById('date').value;
+            const content = document.getElementById('content').value;
+
+            // Prepare data for Firestore
+            const internData = {
+                name: name,
+                class: className,
+                company: company,
+                union: union,
+                date: date,
+                content: content,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                // Save to Firestore
+                if (editingRow) {
+                    // Update existing document (assuming document ID is stored in row's data attribute)
+                    const docId = editingRow.dataset.docId || null;
+                    if (docId) {
+                        await db.collection('testHistoryphatsinh').doc(docId).update(internData);
+                    } else {
+                        // Fallback: create new document if no docId
+                        const docRef = await db.collection('testHistoryphatsinh').add(internData);
+                        editingRow.dataset.docId = docRef.id;
+                    }
+                } else {
+                    // Add new document
+                    const docRef = await db.collection('testHistoryphatsinh').add(internData);
+                    // Update table
+                    const tableBody = document.getElementById('internTableBody');
+                    const newRow = document.createElement('tr');
+                    newRow.dataset.docId = docRef.id; // Store Firestore doc ID
+                    newRow.innerHTML = `
+                        <td class="px-4 py-3 border-b">${name}</td>
+                        <td class="px-4 py-3 border-b">${className}</td>
+                        <td class="px-4 py-3 border-b">${company}</td>
+                        <td class="px-4 py-3 border-b">${union}</td>
+                        <td class="px-4 py-3 border-b">${date}</td>
+                        <td class="px-4 py-3 border-b">${content}</td>
+                        <td class="px-4 py-3 border-b text-center">
+                            <button onclick="editIntern(this)" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteIntern(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(newRow);
+                }
+
+                // Update table for edit
+                if (editingRow) {
+                    editingRow.cells[0].textContent = name;
+                    editingRow.cells[1].textContent = className;
+                    editingRow.cells[2].textContent = company;
+                    editingRow.cells[3].textContent = union;
+                    editingRow.cells[4].textContent = date;
+                    editingRow.cells[5].textContent = content;
+                }
+
+                alert('Dữ liệu đã được lưu thành công!');
+                closeModal();
+            } catch (error) {
+                console.error('Lỗi khi lưu vào Firestore:', error);
+                alert('Đã xảy ra lỗi khi lưu dữ liệu. Vui lòng thử lại.');
+            }
+        });
+    </script>
+</body>
+</html>
+```
